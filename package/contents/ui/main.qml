@@ -23,10 +23,11 @@ Item {
         Text {
             id:titleText
             Layout.alignment:Qt.AlignTop
+            Layout.fillWidth:true
             z:100
 
-            height:16
-            text:i18n.tr("Chat GPT")
+            height:16 * PlasmaCore.Units.devicePixelRatio
+            text:i18n("Chat GPT")
             color:"white"
         }
         WebEngineView {
@@ -41,14 +42,14 @@ Item {
             height:24 * PlasmaCore.Units.devicePixelRatio
             spacing: 5 *  PlasmaCore.Units.devicePixelRatio
             Button {
-                text: i18n.tr("Reload")
+                text: i18n("Reload")
                  icon.name: "view-refresh"
                  onClicked: gptWebView.reload();
             }
-            Button {
-                text: i18n.tr("speek to me")
-                icon.name:"microphone-sensitivity-high"
-            }
+            // Button {
+            //     text: i18n("Speek to me")
+            //     icon.name:"microphone-sensitivity-high"
+            // }
         }
     }
 
