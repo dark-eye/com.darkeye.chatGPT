@@ -15,6 +15,7 @@
             "Plasma/Applet"
         ],
         "Version": "0.1",
+        "Icon" : "contents/ui/assets/logo.svg",
         "Website": "https://github.com/dark-eye/com.darkeye.chatGPT"
     },
     "X-Plasma-API": "declarativeappletscript",
