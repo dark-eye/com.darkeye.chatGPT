@@ -2,7 +2,7 @@
 Encoding=UTF-8
 Name=ChatGPT plasmoid for Plasma
 Keywords=ChatGPT
-Icon="contents/ui/assets/logo.svg"
+Icon=search-symbolic
 X-Plasma-API=declarativeappletscript
 Type=Service
 X-Plasma-Provides=com.darkeye.chatGPT

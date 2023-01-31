@@ -3,7 +3,7 @@
     SPDX-License-Identifier: LGPL-2.1-or-later
 */
 
-import QtQuick 2.0
+import QtQuick 2.3
 import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.0
 import org.kde.plasma.core 2.0 as PlasmaCore
@@ -17,21 +17,35 @@ Item {
         target:plasmoid
         function onActivated() {
             console.log("Plasmoid revealed to user")
-            gptWebView.forceActiveFocus();
-            gptWebView.runJavaScript("setInputFocus();");
         }
         function onStatusChanged() {
-            console.log("Plasmoid status chagned : "+status)
+            console.log("Plasmoid status chagned : ")
         }
         function hideOnWindowDeactivateChanged() {
             console.log("Plasmoid hideOnWindowDeactivateChanged chagned")
         }
         function onExpandedChanged() {
+            if(gptWebView && plasmoid.expanded) {
+                gptWebView.forceActiveFocus();
+                gptWebView.runJavaScript("setInputFocus();");
+            }
             console.log("Plasmoid onExpandedChanged")
         }
     }
     // Plasmoid.backgroundHints: plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
-
+    Plasmoid.compactRepresentation:  Image {
+                anchors.fill:parent
+                smooth: true
+                cache:true
+                asynchronous:true
+                mipmap:true
+                fillMode: Image.PreserveAspectFit
+                source:"assets/logo.svg"
+                MouseArea {
+                    anchors.fill:parent
+                    onClicked: plasmoid.expanded = !plasmoid.expanded 
+                }
+            }
     Plasmoid.fullRepresentation: ColumnLayout {
         Layout.minimumWidth: 256 * PlasmaCore.Units.devicePixelRatio
         Layout.minimumHeight:  720 * PlasmaCore.Units.devicePixelRatio
@@ -44,16 +58,20 @@ Item {
             Image {
                 height:parent.height
                 width:height
+                smooth: true
+                cache:true
+                asynchronous:true
+                mipmap:true
+                fillMode: Image.PreserveAspectFit
                 source:"assets/logo.svg"
             }
             Text {
                 id:titleText
-                Layout.alignment:Qt.AlignTop
+                Layout.alignment:Qt.AlignCenter
                 Layout.fillWidth:true
-                z:100
-
-                height:16 * PlasmaCore.Units.devicePixelRatio
-                text:i18n("Chat GPT")
+                verticalAlignment:Text.AlignVCenter
+                height:24 * PlasmaCore.Units.devicePixelRatio
+                text:i18n("Chat-GPT")
                 color:"white"
             }
         }
@@ -71,7 +89,7 @@ Item {
             onLoadingChanged:  {
                  if(WebEngineView.LoadSucceededStatus == loadRequest.status) {
                     var themeLightness = (isDark(theme.backgroundColor) ? 'dark' : 'light') ;
-                    console.log(" Page successfully loaded  loading custom scripts...");
+                    console.log("Page successfully loaded  loading custom scripts...");
                     gptWebView.runJavaScript("
                     var meta = document.createElement('meta');
                         meta.name = 'prefers-color-scheme';
@@ -108,14 +126,14 @@ Item {
                  icon.name: "view-refresh"
                  onClicked: gptWebView.reload();
             }
-            Button {
-                text: i18n("Focus")
-                 icon.name: "view-refresh"
-                 onClicked: {
-                     gptWebView.forceActiveFocus();
-                     gptWebView.runJavaScript("setInputFocus();");
-                }
-            }
+            // Button {
+            //     text: i18n("Focus")
+            //      icon.name: "view-refresh"
+            //      onClicked: {
+            //          gptWebView.forceActiveFocus();
+            //          gptWebView.runJavaScript("setInputFocus();");
+            //     }
+            // }
             // Button {
             //     text: i18n("Speek to me")
             //     icon.name:"microphone-sensitivity-high"
