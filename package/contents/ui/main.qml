@@ -13,6 +13,11 @@ import org.kde.plasma.plasmoid 2.0
 import QtWebEngine 1.9
 
 Item {
+    id:root
+    property bool themeMismatch: false;
+    property int nextReloadTime: 0
+    property int reloadRetries: 0
+    ;
     // Plasmoid.backgroundHints: plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
     Plasmoid.compactRepresentation:  Image {
                 anchors.fill:parent
@@ -48,9 +53,18 @@ Item {
             }
             function onExpandedChanged() {
                 if(gptWebView && plasmoid.expanded) {
+                    if(gptWebView.LoadStatus == WebEngineView.LoadFailedStatus) {
+                        gptWebView.reload();
+                    }
                     gptWebView.forceActiveFocus();
                     gptWebView.focus=true;
                     gptWebView.runJavaScript("document.userScripts.setInputFocus();");
+                } 
+
+                if(!plasmoid.expanded && root.themeMismatch && plasmoid.configuration.matchTheme ) {
+
+                    root.themeMismatch = false;
+                    gptWebView.reloadAndBypassCache();
                 }
                 console.log("Plasmoid onExpandedChanged :"+plasmoid.expanded )
             }
@@ -107,26 +121,33 @@ Item {
                     ]
                 }
                 onLoadingChanged:  {
-                    if(WebEngineView.LoadSucceededStatus == loadRequest.status) {
+                    if(WebEngineView.LoadSucceededStatus === loadRequest.status) {
+                        root.reloadRetries = 0;
                         var themeLightness = (isDark(theme.backgroundColor) ? 'dark' : 'light') ;
                         gptWebView.runJavaScript("document.userScripts.setConfig("+JSON.stringify(plasmoid.configuration)+");");
                         gptWebView.runJavaScript("document.userScripts.setSendOnEnter();");
-                        // gptWebView.runJavaScript("
-                        // var meta = document.createElement('meta');
-                        //     meta.name = 'prefers-color-scheme';
-                        //     meta.content =  '"+ themeLightness + "';
-                        //     document.getElementsByTagName('head')[0].appendChild(meta);
-                        // ");
-                        // gptWebView.runJavaScript("function setInputFocus() {
-                        //     let inputElement = document.querySelector('textarea.m-0');
-                        //     if(inputElement) {
-                        //         inputElement.focus();
-                        //     }
-                        // }");
+                        gptWebView.runJavaScript("document.userScripts.getTheme();",function(theme) {
+                            console.log("GetTheme run :" + theme);
+                            if( !plasmoid.expanded && plasmoid.configuration.matchTheme && (!theme ||  theme !== themeLightness)) {
+                                gptWebView.runJavaScript("document.userScripts.setTheme('"+themeLightness+"');");
+                                gptWebView.relreloadAndBypassCacheoad();
+                            } else  if(plasmoid.configuration.matchTheme && theme !== themeLightness) {
+                                root.themeMismatch = true;
+                            }
+                        });
+                        gptWebView.runJavaScript("document.userScripts.setTheme('"+themeLightness+"');");
+                        
+                    } else if(WebEngineView.LoadFailedStatus === loadRequest.status && 
+                              !plasmoid.expanded && 
+                              Date.now() > root.nextReloadTime && root.reloadRetries < 10) {
+                        console.log("Failed  when loading  page, reloading as  we are hidden..");
+                        gptWebView.reload();
+                        root.reloadRetries +=1;
+                        root.nextReloadTime = Date.now() + 1000*(2**root.reloadRetries);
                     }
                 }
 
-                onJavaScriptConsoleMessage :{
+                onJavaScriptConsoleMessage : if (Qt.application.arguments[0] == "plasmoidviewer") {
                     console.log("Chat-GPT : " + message);
                 }
 
@@ -134,29 +155,45 @@ Item {
                     if(request.url.toString().match(/https?\:\/\/chat\.openai\.com/)) {
                         gptWebView.url = request.url;
                     } else {
-                        request.action = WebEngineNavigationRequest.IgnoreRequest;
                         Qt.openUrlExternally(request.url);
+                        request.action = WebEngineNavigationRequest.IgnoreRequest;
                     }
+                } else {
+                    console.log(request.url)
                 }
 
                 function isDark(color) {
                     var luminance = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
                     return (luminance < 0.5);
                 }
-                WebEngineView {
-                    id:gptWebViewInspector
-                    enabled:false
-                    visible: false
-                    z:100
-                    anchors {
-                        left:parent.left
-                        right:parent.right
-                        bottom:parent.bottom
-                    }
-                    height:parent.height /2
-                    Layout.fillWidth:true
-                
-                    inspectedView:gptWebView
+            }
+        }
+        WebEngineView {
+            id:gptWebViewInspector
+            enabled: false
+            visible: false
+            z:100
+            height:parent.height /2
+
+            Layout.fillWidth:true
+            Layout.alignment:Qt.AlignBottom
+            inspectedView:enabled ? gptWebView : null
+        }
+        Row {
+            id:proLinkContainer
+            visible:false;
+            TextField {
+                enabled: proLinkContainer.visible
+                id:proLinkField
+                text:""
+            }
+            Button {
+                // text: i18n("ChatGPT Pro")
+                enabled: proLinkContainer.visible
+                icon.name: "go-next"
+                onClicked:  { 
+                        gptWebView.url = proLinkField.text;
+                        proLinkContainer.visible= false;
                 }
             }
         }
@@ -171,6 +208,12 @@ Item {
                  onClicked: gptWebView.reload();
             }
             Button {
+                text: i18n("Im a Pro")
+                visible:gptWebView.url.toString().match(/chat\.openai\.com\/auth/);
+                 icon.name: "x-office-contact"
+                 onClicked: proLinkContainer.visible = true;
+            }
+            Button {
                 text: i18n("Back to ChatGPT")
                 visible:!gptWebView.url.toString().match(/chat\.openai\.com\/(chat|auth)/);
                 enabled:visible
@@ -183,7 +226,8 @@ Item {
                 enabled:visible
                  icon.name: "view-refresh"
                  onClicked: {
-                     gptWebViewInspector.enabled = gptWebViewInspector.visible = !gptWebViewInspector.visible;
+                      gptWebViewInspector.visible = !gptWebViewInspector.visible;
+                      gptWebViewInspector.enabled = visible || gptWebViewInspector.visible
                  }
             }
             // Button {

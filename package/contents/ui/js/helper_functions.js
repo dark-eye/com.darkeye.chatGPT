@@ -5,7 +5,7 @@ document.userScripts.getMainInput = function() {
 }
 
 document.userScripts.getSendButton = function() {
-		return document.querySelector('button.p-1');
+		return document.querySelector('textarea.m-0 + button.p-1');
 }
 
 
@@ -32,6 +32,16 @@ document.userScripts.setSendOnEnter = function () {
 	console.log('setSendOnEnter');
 }
 
+document.userScripts.setTheme = function (theme) {
+	if( document.userScripts.config && document.userScripts.config.matchTheme && theme ) {
+		localStorage.setItem('theme', theme);
+		console.log('setTheme');
+	}
+}
+
+document.userScripts.getTheme = function () {	
+	return localStorage.getItem('theme');
+}
 
 document.userScripts.removeSendOnEnter = function () {
 	let inputElement =  document.userScripts.getMainInput();

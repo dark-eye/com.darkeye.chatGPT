@@ -6,6 +6,9 @@
         <entry name="sendOnEnter" type="Bool">
             <default>false</default>
         </entry>
+          <entry name="matchTheme" type="Bool">
+            <default>true</default>
+        </entry>
     </group>
 </kcfg>
 

@@ -6,6 +6,7 @@ Kirigami.FormLayout {
     id: page
 
     property alias cfg_sendOnEnter: sendOnEnter.checked
+	property alias cfg_matchTheme: matchTheme.checked
 
     QQC2.CheckBox {
         id: sendOnEnter
@@ -20,4 +21,9 @@ Kirigami.FormLayout {
 		font.italic: true
 		text:i18n("For now please reload the page with the 'Reload' Button after changing this configuration.");
 	}
+	
+	 QQC2.CheckBox {
+        id: matchTheme
+        text: i18n("Match OS theme")
+    }
 }
