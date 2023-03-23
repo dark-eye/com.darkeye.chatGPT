@@ -1,7 +1,7 @@
 /*
-    SPDX-FileCopyrightText: %{CURRENT_YEAR} %{AUTHOR} <%{EMAIL}>
-    SPDX-License-Identifier: LGPL-2.1-or-later
-*/
+ *    SPDX-FileCopyrightText: %{CURRENT_YEAR} %{AUTHOR} <%{EMAIL}>
+ *    SPDX-License-Identifier: LGPL-2.1-or-later
+ */
 
 import QtQuick 2.3
 import QtQuick.Layouts 1.0
@@ -11,6 +11,8 @@ import org.kde.plasma.components 2.0 as PlasmaComponents
 import org.kde.plasma.plasmoid 2.0
 
 import QtWebEngine 1.9
+// import QtWebEngineCore 1.15
+// import QtWebChannel 1.0
 
 Item {
     id:root
@@ -19,37 +21,37 @@ Item {
     property int reloadRetries: 0
     ;
     // Plasmoid.backgroundHints: plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
-    Plasmoid.compactRepresentation:  Image {
-                anchors.fill:parent
-                smooth: true
-                cache:true
-                asynchronous:true
-                mipmap:true
-                fillMode: Image.PreserveAspectFit
-                source:"assets/logo.svg"
-                MouseArea {
-                    anchors.fill:parent
-                    onClicked: { 
-                        plasmoid.expanded = !plasmoid.expanded
-                    }
-                }
+    Plasmoid.compactRepresentation: PlasmaCore.SvgItem {
+        anchors.fill:parent
+        
+        svg : PlasmaCore.Svg {
+            imagePath:Qt.resolvedUrl("assets/logo.svg");
+        }
+        
+        MouseArea {
+            anchors.fill:parent
+            onClicked: { 
+                plasmoid.expanded = !plasmoid.expanded
             }
+        }
+        
+    }
     Plasmoid.fullRepresentation: ColumnLayout {
         Layout.minimumWidth: 256 * PlasmaCore.Units.devicePixelRatio
-        Layout.minimumHeight:  720 * PlasmaCore.Units.devicePixelRatio
+        Layout.minimumHeight:  512 * PlasmaCore.Units.devicePixelRatio
         Layout.preferredWidth: 480 * PlasmaCore.Units.devicePixelRatio
         Layout.preferredHeight: 920 * PlasmaCore.Units.devicePixelRatio
-
-         Connections {
+        
+        Connections {
             target:plasmoid
             function onActivated() {
                 console.log("Plasmoid revealed to user")
             }
             function onStatusChanged() {
-                console.log("Plasmoid status chagned "+plasmoid.status)
+                console.log("Plasmoid status changed "+plasmoid.status)
             }
             function hideOnWindowDeactivateChanged() {
-                console.log("Plasmoid hideOnWindowDeactivateChanged chagned")
+                console.log("Plasmoid hideOnWindowDeactivateChanged changed")
             }
             function onExpandedChanged() {
                 if(gptWebView && plasmoid.expanded) {
@@ -60,28 +62,28 @@ Item {
                     gptWebView.focus=true;
                     gptWebView.runJavaScript("document.userScripts.setInputFocus();");
                 } 
-
+                
                 if(!plasmoid.expanded && root.themeMismatch && plasmoid.configuration.matchTheme ) {
-
                     root.themeMismatch = false;
                     gptWebView.reloadAndBypassCache();
                 }
                 console.log("Plasmoid onExpandedChanged :"+plasmoid.expanded )
             }
         }
-
+        
         anchors.fill: parent
         Row {
             spacing:2 * PlasmaCore.Units.devicePixelRatio
-            Image {
+            PlasmaCore.SvgItem {
                 height:parent.height
                 width:height
-                smooth: true
-                cache:true
-                asynchronous:true
-                mipmap:true
-                fillMode: Image.PreserveAspectFit
-                source:"assets/logo.svg"
+                svg: PlasmaCore.Svg {
+                    imagePath:Qt.resolvedUrl("./assets/logo.svg");
+                    Component.onCompleted: {
+                        console.log(" PlasmaCore.Svg onStatusChanged :"+fromCurrentTheme)
+                    }
+                    
+                }
             }
             Text {
                 id:titleText
@@ -90,7 +92,7 @@ Item {
                 verticalAlignment:Text.AlignVCenter
                 height:24 * PlasmaCore.Units.devicePixelRatio
                 text:i18n("Chat-GPT")
-                color:"white"
+                color:theme.textColor
             }
         }
         FocusScope {
@@ -99,11 +101,11 @@ Item {
             WebEngineView {
                 id:gptWebView
                 anchors.fill:parent
-
+                
                 focus: true
-
+                
                 url:"https://chat.openai.com/chat"
-
+                
                 profile: WebEngineProfile {
                     id:chatGptProfile
                     storageName: "chat-gpt"
@@ -138,19 +140,19 @@ Item {
                         gptWebView.runJavaScript("document.userScripts.setTheme('"+themeLightness+"');");
                         
                     } else if(WebEngineView.LoadFailedStatus === loadRequest.status && 
-                              !plasmoid.expanded && 
-                              Date.now() > root.nextReloadTime && root.reloadRetries < 10) {
+                        !plasmoid.expanded && 
+                        Date.now() > root.nextReloadTime && root.reloadRetries < 10) {
                         console.log("Failed  when loading  page, reloading as  we are hidden..");
-                        gptWebView.reload();
-                        root.reloadRetries +=1;
-                        root.nextReloadTime = Date.now() + 1000*(2**root.reloadRetries);
-                    }
+                    gptWebView.reload();
+                    root.reloadRetries +=1;
+                    root.nextReloadTime = Date.now() + 1000*(2**root.reloadRetries);
+                        }
                 }
-
+                
                 onJavaScriptConsoleMessage : if (Qt.application.arguments[0] == "plasmoidviewer") {
                     console.log("Chat-GPT : " + message);
                 }
-
+                
                 onNavigationRequested :if(request.navigationType == WebEngineNavigationRequest.LinkClickedNavigation){
                     if(request.url.toString().match(/https?\:\/\/chat\.openai\.com/)) {
                         gptWebView.url = request.url;
@@ -161,7 +163,7 @@ Item {
                 } else {
                     console.log(request.url)
                 }
-
+                
                 function isDark(color) {
                     var luminance = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
                     return (luminance < 0.5);
@@ -174,17 +176,22 @@ Item {
             visible: false
             z:100
             height:parent.height /2
-
+            
             Layout.fillWidth:true
             Layout.alignment:Qt.AlignBottom
             inspectedView:enabled ? gptWebView : null
         }
         Row {
             id:proLinkContainer
+            Layout.fillWidth:true
             visible:false;
             TextField {
-                enabled: proLinkContainer.visible
                 id:proLinkField
+                
+                enabled: proLinkContainer.visible
+                Layout.fillWidth:true
+                
+                placeholderText:i18n("Paste the accesss link that was send to your email.")
                 text:""
             }
             Button {
@@ -192,8 +199,8 @@ Item {
                 enabled: proLinkContainer.visible
                 icon.name: "go-next"
                 onClicked:  { 
-                        gptWebView.url = proLinkField.text;
-                        proLinkContainer.visible= false;
+                    gptWebView.url = proLinkField.text;
+                    proLinkContainer.visible= false;
                 }
             }
         }
@@ -204,31 +211,31 @@ Item {
             spacing: 5 *  PlasmaCore.Units.devicePixelRatio
             Button {
                 text: i18n("Reload")
-                 icon.name: "view-refresh"
-                 onClicked: gptWebView.reload();
+                icon.name: "view-refresh"
+                onClicked: gptWebView.reload();
             }
             Button {
                 text: i18n("Im a Pro")
                 visible:gptWebView.url.toString().match(/chat\.openai\.com\/auth/);
-                 icon.name: "x-office-contact"
-                 onClicked: proLinkContainer.visible = true;
+                icon.name: "x-office-contact"
+                onClicked: proLinkContainer.visible = true;
             }
             Button {
                 text: i18n("Back to ChatGPT")
                 visible:!gptWebView.url.toString().match(/chat\.openai\.com\/(chat|auth)/);
                 enabled:visible
-                 icon.name: "edit-undo"
-                 onClicked: gptWebView.url = "https://chat.openai.com/chat";
+                icon.name: "edit-undo"
+                onClicked: gptWebView.url = "https://chat.openai.com/chat";
             }
             Button {
                 text: i18n("Debug")
                 visible: Qt.application.arguments[0] == "plasmoidviewer"
                 enabled:visible
-                 icon.name: "view-refresh"
-                 onClicked: {
-                      gptWebViewInspector.visible = !gptWebViewInspector.visible;
-                      gptWebViewInspector.enabled = visible || gptWebViewInspector.visible
-                 }
+                icon.name: "view-refresh"
+                onClicked: {
+                    gptWebViewInspector.visible = !gptWebViewInspector.visible;
+                    gptWebViewInspector.enabled = visible || gptWebViewInspector.visible
+                }
             }
             // Button {
             //     text: i18n("Speek to me")
@@ -239,6 +246,6 @@ Item {
             // }
         }
     }
-
+    
 }
- 
+

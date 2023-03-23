@@ -23,9 +23,11 @@ document.userScripts.setSendOnEnter = function () {
 	if(inputElement && !document.userScripts.saveData.oldOnPress) {
 		document.userScripts.saveData.oldOnPress = inputElement.onkeypress;
 		inputElement.onkeypress = function(e) {
-			if(e.keyCode == 13 && document.userScripts.config.sendOnEnter) {
-				document.userScripts.getSendButton().click();
-				return false;
+			if(	e.keyCode == 13  && 
+				!e.shiftKey && !e.ctrlKey && 
+				document.userScripts.config.sendOnEnter) {
+					document.userScripts.getSendButton().click();
+					return false;
 			}
 		}
 	}
