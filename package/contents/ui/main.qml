@@ -21,20 +21,23 @@ Item {
     property int reloadRetries: 0
     ;
     // Plasmoid.backgroundHints: plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
-    Plasmoid.compactRepresentation: PlasmaCore.SvgItem {
+    Plasmoid.compactRepresentation: Item {
         anchors.fill:parent
-        
-        svg : PlasmaCore.Svg {
-            imagePath:Qt.resolvedUrl("assets/logo.svg");
-        }
-        
-        MouseArea {
-            anchors.fill:parent
-            onClicked: { 
-                plasmoid.expanded = !plasmoid.expanded
+        PlasmaCore.SvgItem {
+            width:parent.width < parent.height ? parent.width : parent.height
+            height:width
+
+            svg : PlasmaCore.Svg {
+                imagePath:Qt.resolvedUrl("assets/logo.svg");
             }
-        }
-        
+
+            MouseArea {
+                anchors.fill:parent
+                onClicked: { 
+                    plasmoid.expanded = !plasmoid.expanded
+                }
+            }
+        }  
     }
     Plasmoid.fullRepresentation: ColumnLayout {
         Layout.minimumWidth: 256 * PlasmaCore.Units.devicePixelRatio
@@ -82,7 +85,6 @@ Item {
                     Component.onCompleted: {
                         console.log(" PlasmaCore.Svg onStatusChanged :"+fromCurrentTheme)
                     }
-                    
                 }
             }
             Text {
