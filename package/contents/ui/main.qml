@@ -24,6 +24,7 @@ Item {
     Plasmoid.compactRepresentation: Item {
         anchors.fill:parent
         PlasmaCore.SvgItem {
+            anchors.centerIn : parent
             width:parent.width < parent.height ? parent.width : parent.height
             height:width
 
