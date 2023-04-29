@@ -76,26 +76,57 @@ Item {
         }
         
         anchors.fill: parent
-        Row {
-            spacing:2 * PlasmaCore.Units.devicePixelRatio
-            PlasmaCore.SvgItem {
-                height:parent.height
-                width:height
-                svg: PlasmaCore.Svg {
-                    imagePath:Qt.resolvedUrl("./assets/logo.svg");
-                    Component.onCompleted: {
-                        console.log(" PlasmaCore.Svg onStatusChanged :"+fromCurrentTheme)
+        Column {
+            anchors {
+                right:parent.right;
+                left: parent.left;
+                top:parent.top;
+            }
+            height: 24 * PlasmaCore.Units.devicePixelRatio
+            spacing: 2 * PlasmaCore.Units.devicePixelRatio
+            Row {
+                anchors {
+                    right:pinButton.left;
+                    left: parent.left;
+                    top:parent.top;
+                    bottom:parent.bottom
+                }
+                spacing: 2 * PlasmaCore.Units.devicePixelRatio
+                PlasmaCore.SvgItem {
+                    height:parent.height
+                    width:height
+                    svg: PlasmaCore.Svg {
+                        imagePath:Qt.resolvedUrl("./assets/logo.svg");
                     }
                 }
+                Text {
+                    id:titleText
+                    Layout.alignment:Qt.AlignCenter
+                    Layout.fillWidth:true
+                    height:parent.height
+                    verticalAlignment:Text.AlignVCenter
+                    text:i18n("Chat-GPT")
+                    color:theme.textColor
+                }
             }
-            Text {
-                id:titleText
-                Layout.alignment:Qt.AlignCenter
-                Layout.fillWidth:true
-                verticalAlignment:Text.AlignVCenter
+            Button {
+                id:pinButton
                 height:24 * PlasmaCore.Units.devicePixelRatio
-                text:i18n("Chat-GPT")
-                color:theme.textColor
+                width:height
+                anchors {
+                    right: parent.right;
+                    top:parent.top;
+                }
+                checkable: true
+                icon.name: "window-pin"
+                checked: plasmoid.configuration.pin
+                onCheckedChanged: plasmoid.configuration.pin = checked
+            }
+            //-------------------- Connections  -----------------------
+            Binding {
+                target: plasmoid
+                property: "hideOnWindowDeactivate"
+                value: !plasmoid.configuration.pin
             }
         }
         FocusScope {
@@ -225,7 +256,7 @@ Item {
             }
             Button {
                 text: i18n("Back to ChatGPT")
-                visible:!gptWebView.url.toString().match(/chat\.openai\.com\/(chat|auth)/);
+                visible:!gptWebView.url.toString().match(/chat\.openai\.com\/(|chat|auth)/);
                 enabled:visible
                 icon.name: "edit-undo"
                 onClicked: gptWebView.url = "https://chat.openai.com/chat";
