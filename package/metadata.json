@@ -14,7 +14,7 @@
         "ServiceTypes": [
             "Plasma/Applet"
         ],
-        "Version": "0.5",
+        "Version": "0.6",
         "Website": "https://github.com/dark-eye/com.darkeye.chatGPT"
     },
     "X-Plasma-API": "declarativeappletscript",
