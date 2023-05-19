@@ -9,6 +9,9 @@
           <entry name="matchTheme" type="Bool">
             <default>true</default>
         </entry>
+        <entry name="focusInterval" type="Number">
+            <default>0</default>
+        </entry>
           <entry name="icon" type="String">
             <label>The path of the icon used in the compact representation (e.g. on a small panel).</label>
             <default>assets/logo.svg</default>
