@@ -279,7 +279,7 @@ Item {
 			}
 			Button {
 				text: i18n("Debug")
-				visible: Qt.application.arguments[0] == "plasmoidviewer"
+				visible: Qt.application.arguments[0] == "plasmoidviewer" || plasmoid.configuration.debugConsole
 				enabled:visible
 				icon.name: "view-refresh"
 				onClicked: {

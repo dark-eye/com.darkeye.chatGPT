@@ -16,6 +16,9 @@
             <label>The path of the icon used in the compact representation (e.g. on a small panel).</label>
             <default>assets/logo.svg</default>
         </entry>
+        <entry name="debugConsole" type="Bool">
+            <default>false</default>
+        </entry>
     </group>
 </kcfg>
 
