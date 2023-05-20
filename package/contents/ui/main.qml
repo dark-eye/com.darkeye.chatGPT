@@ -172,6 +172,9 @@ Item {
 						}
 					]
 				}
+
+				settings.javascriptCanAccessClipboard: plasmoid.configuration.allowClipboardAccess
+
 				onLoadingChanged:  {
 					if(WebEngineView.LoadSucceededStatus === loadRequest.status) {
 						root.reloadRetries = 0;

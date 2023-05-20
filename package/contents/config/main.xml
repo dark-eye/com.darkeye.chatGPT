@@ -9,6 +9,9 @@
           <entry name="matchTheme" type="Bool">
             <default>true</default>
         </entry>
+          <entry name="allowClipboardAccess" type="Bool">
+            <default>true</default>
+        </entry>
         <entry name="focusInterval" type="Number">
             <default>0</default>
         </entry>

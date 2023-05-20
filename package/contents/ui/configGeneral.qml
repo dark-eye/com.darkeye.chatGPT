@@ -8,6 +8,7 @@ Kirigami.FormLayout {
 
     property alias cfg_sendOnEnter: sendOnEnter.checked
 	property alias cfg_matchTheme: matchTheme.checked
+	property alias cfg_allowClipboardAccess: allowClipboardAccess.checked
 
 	Layout.fillHeight:true
 
@@ -29,4 +30,15 @@ Kirigami.FormLayout {
         id: matchTheme
         text: i18n("Match OS theme")
     }
+
+	QQC2.CheckBox {
+        id: allowClipboardAccess
+        text: i18n("Allow ChatGPT system clipboard access")
+    }
+    QQC2.Label {
+		font.pixelSize: 8
+		font.italic: true
+		text:i18n("This is enabled by default to allow for quick code/recipe/etc but can be disabled if you are worried about ChatCGPT  examining your system clipboard");
+	}
+
 }
