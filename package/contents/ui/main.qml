@@ -15,33 +15,12 @@ import org.kde.kirigami 2.19 as Kirigami
 import QtWebEngine 1.9
 
 Item {
-	id:root
+	id: root
 	property bool themeMismatch: false;
 	property int nextReloadTime: 0
 	property int reloadRetries: 0
 
-	// Plasmoid.backgroundHints: plasmoid.configuration.showBackground ? PlasmaCore.Types.DefaultBackground : PlasmaCore.Types.NoBackground
-	Plasmoid.compactRepresentation: Item {
-		anchors.fill:parent
-		
-		PlasmaCore.SvgItem {
-			anchors.centerIn: parent
-			width: parent.width < parent.height ? parent.width : parent.height
-			height: width
-
-			svg: PlasmaCore.Svg {
-				imagePath:Qt.resolvedUrl("assets/logo.svg");
-			}
-
-			MouseArea {
-				anchors.fill: parent
-
-				onClicked: {
-					plasmoid.expanded = !plasmoid.expanded
-				}
-			}
-		}
-	}
+	Plasmoid.compactRepresentation: CompactRepresentation {}
 
 	Plasmoid.fullRepresentation: ColumnLayout {
 		anchors.fill: parent
@@ -53,11 +32,12 @@ Item {
 
 		//-----------------------------  Helpers ------------------
 		// Added workaround by @zontafil thank you!
+		
 		Timer {
-			id:exposeTimer
+			id: exposeTimer
 
-			interval:plasmoid.configuration.focusInterval ? plasmoid.configuration.focusInterval : 0
-			running:false
+			interval: plasmoid.configuration.focusInterval ? plasmoid.configuration.focusInterval : 0
+			running: false
 			onTriggered: {
 				gptWebView.forceActiveFocus();
 				gptWebView.focus=true;
@@ -67,7 +47,7 @@ Item {
 		}
 
 		Connections {
-			target:plasmoid
+			target: plasmoid
 			function onActivated() {
 				console.log("Plasmoid revealed to user")
 			}
@@ -96,7 +76,6 @@ Item {
 		//------------------------------------- UI -----------------------------------------
 
 		ColumnLayout {
-			height: 24 * PlasmaCore.Units.devicePixelRatio
 			spacing: Kirigami.Units.mediumSpacing
 
 			PlasmaExtras.PlasmoidHeading {
@@ -219,6 +198,7 @@ Item {
 			}
 
 			//-------------------- Connections  -----------------------
+
 			Binding {
 				target: plasmoid
 				property: "hideOnWindowDeactivate"
@@ -302,85 +282,7 @@ Item {
 				}
 			}
 		}
-
-		// WebEngineView {
-		// 	Layout.fillWidth: true
-		// 	Layout.alignment: Qt.AlignBottom
-			
-		// 	id: gptWebViewInspector
-		// 	enabled: false
-		// 	visible: false
-		// 	z: 100
-		// 	height: parent.height /2
-		// 	inspectedView: enabled ? gptWebView : null
-		// }
-
-		// Row {
-		// 	id:proLinkContainer
-		// 	Layout.fillWidth:true
-		// 	visible:false;
-		// 	TextField {
-		// 		id:proLinkField
-
-		// 		enabled: proLinkContainer.visible
-		// 		Layout.fillWidth:true
-
-		// 		placeholderText:i18n("Paste the accesss link that was send to your email.")
-		// 		text:""
-		// 	}
-		// 	Button {
-		// 		// text: i18n("ChatGPT Pro")
-		// 		enabled: proLinkContainer.visible
-		// 		icon.name: "go-next"
-		// 		onClicked:  {
-		// 			gptWebView.url = proLinkField.text;
-		// 			proLinkContainer.visible= false;
-		// 		}
-		// 	}
-		// }
-
-		// Row {
-		// 	id:toolRow
-		// 	Layout.alignment:Qt.AlignBottom
-		// 	height:24 * PlasmaCore.Units.devicePixelRatio
-		// 	spacing: 5 *  PlasmaCore.Units.devicePixelRatio
-
-		// 	// Button {
-		// 	// 	text: i18n("Im a Pro")
-		// 	// 	visible:gptWebView.url.toString().match(/chat\.openai\.com\/auth/);
-		// 	// 	icon.name: "x-office-contact"
-		// 	// 	onClicked: proLinkContainer.visible = true;
-		// 	// }
-
-		// 	Button {
-		// 		text: i18n("Back to ChatGPT")
-		// 		visible:!gptWebView.url.toString().match(/chat\.openai\.com\/(|chat|auth)/);
-		// 		enabled:visible
-		// 		icon.name: "edit-undo"
-		// 		onClicked: gptWebView.url = "https://chat.openai.com/chat";
-		// 	}
-			
-		// 	// Button {
-		// 	// 	text: i18n("Debug")
-		// 	// 	visible: Qt.application.arguments[0] == "plasmoidviewer" || plasmoid.configuration.debugConsole
-		// 	// 	enabled:visible
-		// 	// 	icon.name: "view-refresh"
-		// 	// 	onClicked: {
-		// 	// 		gptWebViewInspector.visible = !gptWebViewInspector.visible;
-		// 	// 		gptWebViewInspector.enabled = visible || gptWebViewInspector.visible
-		// 	// 	}
-		// 	// }
-
-		// 	// Button {
-		// 	//     text: i18n("Speek to me")
-		// 	//     icon.name:"microphone-sensitivity-high"
-		// 	//      onClicked: {
-		// 	//          console.log(chatGptProfile.persistentStoragePath)
-		// 	//      }
-		// 	// }
-		// }
 	}
-
 }
 
 
