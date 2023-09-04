@@ -259,7 +259,7 @@ Item {
 						console.log("Failed  when loading  page, reloading as we are hidden..");
 						gptWebView.reload();
 						root.reloadRetries +=1;
-						root.nextReloadTime = Date.now() + 1000 * (2**root.reloadRetries);
+						root.nextReloadTime = Math.min(Date.now() + 1000 * (2**root.reloadRetries) , plasmoid.configuration.maxReloadTime * 1000);
 					}
 				}
 
