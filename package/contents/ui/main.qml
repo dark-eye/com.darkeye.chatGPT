@@ -25,8 +25,8 @@ Item {
 	Plasmoid.fullRepresentation: ColumnLayout {
 		anchors.fill: parent
 
-		Layout.minimumWidth: 480 * PlasmaCore.Units.devicePixelRatio
-		Layout.minimumHeight:  720 * PlasmaCore.Units.devicePixelRatio
+		Layout.minimumWidth: 256 * PlasmaCore.Units.devicePixelRatio
+		Layout.minimumHeight:  512 * PlasmaCore.Units.devicePixelRatio
 		Layout.preferredWidth: 520 * PlasmaCore.Units.devicePixelRatio
 		Layout.preferredHeight: 840 * PlasmaCore.Units.devicePixelRatio
 
