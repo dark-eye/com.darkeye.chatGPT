@@ -17,8 +17,10 @@ import QtWebEngine 1.9
 Item {
 	id: root
 	property bool themeMismatch: false;
-	property int nextReloadTime: 0
-	property int reloadRetries: 0
+	property int nextReloadTime: 0;
+	property int reloadRetries: 0;
+	property int maxReloadRetiries: 25;
+	property bool loadedsuccessfully:false;
 
 	Plasmoid.compactRepresentation: CompactRepresentation {}
 
@@ -43,6 +45,22 @@ Item {
 				gptWebView.focus=true;
 				gptWebView.runJavaScript("document.userScripts.setInputFocus();");
 				console.log("Plasmoid exposeTimer :"+plasmoid.expanded )
+			}
+		}
+
+		Timer {
+			id: reloadTimer
+
+			interval: 1000
+			running:  !plasmoid.expand
+			onTriggered: if(	!loadedsuccessfully &&
+								!plasmoid.expanded &&
+								Date.now() > root.nextReloadTime &&
+								root.reloadRetries < root.maxReloadRetiries ){
+					console.log("Failed to load ChatGPT page, reloading as we are hidden..");
+					root.reloadRetries +=1;
+					root.nextReloadTime = Math.min(Date.now() + 1000 * (2**root.reloadRetries) , plasmoid.configuration.maxReloadTime * 1000);
+					gptWebView.reload();
 			}
 		}
 
@@ -117,7 +135,7 @@ Item {
 						PlasmaComponents.ToolButton {
 							text: i18n("Debug")
 							checkable: true
-							checked: gptWebViewInspector.enabled
+							checked: gptWebViewInspector && gptWebViewInspector.enabled
 							visible: Qt.application.arguments[0] == "plasmoidviewer" || plasmoid.configuration.debugConsole
 							enabled: visible
 							icon.name: "format-text-code"
@@ -206,12 +224,11 @@ Item {
 			}
 		}
 
-		FocusScope {
-			Layout.fillHeight: true
-			Layout.fillWidth: true
 
-			WebEngineView {
-				anchors.fill: parent
+		WebEngineView {
+				// anchors.fill: parent
+				Layout.fillHeight: true
+				Layout.fillWidth: true
 
 				id: gptWebView
 				focus: true
@@ -251,16 +268,13 @@ Item {
 							}
 						});
 						gptWebView.runJavaScript("document.userScripts.setTheme('"+themeLightness+"');");
-					} else if(
-						WebEngineView.LoadFailedStatus === loadRequest.status &&
-						!plasmoid.expanded &&
-						Date.now() > root.nextReloadTime && root.reloadRetries < 10
-					) {
-						console.log("Failed  when loading  page, reloading as we are hidden..");
-						gptWebView.reload();
-						root.reloadRetries +=1;
-						root.nextReloadTime = Math.min(Date.now() + 1000 * (2**root.reloadRetries) , plasmoid.configuration.maxReloadTime * 1000);
 					}
+
+
+					loadedsuccessfully = 	( loadRequest.status == WebEngineLoadRequest.LoadSucceededStatus && (gptWebView.loadProgress == 100 || gptWebView.loadProgress == 0))
+										&&
+											( !gptWebView.loading )
+
 				}
 
 				onJavaScriptConsoleMessage: if(Qt.application.arguments[0] == "plasmoidviewer") {
@@ -281,7 +295,17 @@ Item {
 					return (luminance < 0.5);
 				}
 			}
-		}
+			WebEngineView {
+				id:gptWebViewInspector
+				enabled: false
+				visible: false
+				z:100
+				height:parent.height /2
+
+				Layout.fillWidth:true
+				Layout.alignment:Qt.AlignBottom
+				inspectedView:enabled ? gptWebView : null
+			}
 	}
 }
 
