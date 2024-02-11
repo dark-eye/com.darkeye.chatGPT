@@ -6,6 +6,7 @@
 import QtQuick 2.3
 import QtQuick.Layouts 1.0
 import QtQuick.Controls 2.0
+import QtQuick.Dialogs 1.3
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents
 import org.kde.plasma.plasmoid 2.0
@@ -92,6 +93,10 @@ Item {
 		}
 
 		//------------------------------------- UI -----------------------------------------
+
+		FileDialog {
+			id:fileDialog
+		}
 
 		ColumnLayout {
 			spacing: Kirigami.Units.mediumSpacing
@@ -224,6 +229,7 @@ Item {
 			}
 		}
 
+		//-------------------------  Actual ChatGPT View --------------------------
 
 		WebEngineView {
 				// anchors.fill: parent
@@ -240,6 +246,9 @@ Item {
 					offTheRecord: false
 					httpCacheType: WebEngineProfile.DiskHttpCache
 					persistentCookiesPolicy: WebEngineProfile.ForcePersistentCookies
+					downloadPath: plasmoid.configuration.downloadLocation ?
+										plasmoid.configuration.downloadLocation :
+										chatGptProfile.downloadPath
 					userScripts: [
 						WebEngineScript {
 							injectionPoint: WebEngineScript.DocumentCreation
@@ -248,6 +257,12 @@ Item {
 							sourceUrl: "./js/helper_functions.js"
 						}
 					]
+					onDownloadRequested : {
+						console.log("onDownloadRequested : " + download.downloadFileName);
+						if( plasmoid.configuration.downloadLocation ) {
+							download.accept();
+						}
+					}
 				}
 
 				settings.javascriptCanAccessClipboard: plasmoid.configuration.allowClipboardAccess
@@ -277,16 +292,41 @@ Item {
 
 				}
 
-				onJavaScriptConsoleMessage: if(Qt.application.arguments[0] == "plasmoidviewer") {
+				onFileDialogRequested: {
+					console.log("onFileDialogRequested");
+					//console.log(JSON.stringify(request));
+					fileDialog.title = "Choose File";
+					fileDialog.accept.connect(function (request){
+						request.dialogAccept(fileDialog.selectedFiles);
+					});
+					fileDialog.reject.connect(function(request) {
+						request.dialogReject()
+					});
+					fileDialog.open();
+					request.accepted = true
+				}
+
+				onJavaScriptDialogRequested : {
+					console.log("onJavaScriptDialogRequested");
+				}
+
+				onNewViewRequested : {
+					console.log("onNewViewRequested");
+				}
+
+				onJavaScriptConsoleMessage: if( Qt.application.arguments[0] == "plasmoidviewer" ) {
 					console.log("Chat-GPT: " + message);
 				}
 
-				onNavigationRequested: if(request.navigationType == WebEngineNavigationRequest.LinkClickedNavigation) {
-					if(request.url.toString().match(/https?\:\/\/chat\.openai\.com/)) {
-						gptWebView.url = request.url;
-					} else {
-						Qt.openUrlExternally(request.url);
-						request.action = WebEngineNavigationRequest.IgnoreRequest;
+				onNavigationRequested: {
+					if(request.navigationType == WebEngineNavigationRequest.LinkClickedNavigation) {
+						if(request.url.toString().match(/https?\:\/\/chat\.openai\.com/)) {
+							gptWebView.url = request.url;
+							console.log(request.url);
+						} else {
+							Qt.openUrlExternally(request.url);
+							request.action = WebEngineNavigationRequest.IgnoreRequest;
+						}
 					}
 				}
 

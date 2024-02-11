@@ -4,7 +4,7 @@
 
     <group name="General">
         <entry name="sendOnEnter" type="Bool">
-            <default>false</default>
+            <default>true</default>
         </entry>
           <entry name="matchTheme" type="Bool">
             <default>true</default>
@@ -24,6 +24,9 @@
         </entry>
         <entry name="maxReloadTime" type="Number">
             <default>600</default>
+        </entry>
+        <entry name="downloadLocation" type="String">
+            <default></default>
         </entry>
     </group>
 </kcfg>
