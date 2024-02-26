@@ -14,8 +14,6 @@ document.userScripts.getStopButton = function() {
 }
 
 
-
-
 document.userScripts.setInputFocus = function () {
 	let inputElement = document.userScripts.getMainInput();
 	if(inputElement) {
@@ -26,10 +24,12 @@ document.userScripts.setInputFocus = function () {
 
 
 document.userScripts.setSendOnEnter = function () {
+
 	let inputElement =  document.userScripts.getMainInput();
 	if(inputElement && !document.userScripts.saveData.oldOnPress) {
 		document.userScripts.saveData.oldOnPress = inputElement.onkeypress;
 		inputElement.onkeypress = function(e) {
+			// console.log('keypress : ' + e.keyCode);
 			if(document.userScripts.config.sendOnEnter) {
 				if(	!e.shiftKey && !e.ctrlKey )
 					switch(e.keyCode) {
@@ -38,15 +38,11 @@ document.userScripts.setSendOnEnter = function () {
 								return false;
 						}
 						break;
-						case 27 : {
-								document.userScripts.getStopButton().click();
-								return false;
-						}
-						break;
 					}
 			}
 		}
 	}
+
 	console.log('setSendOnEnter');
 }
 

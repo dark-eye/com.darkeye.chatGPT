@@ -33,7 +33,7 @@ Item {
 		Layout.preferredWidth: 520 * PlasmaCore.Units.devicePixelRatio
 		Layout.preferredHeight: 840 * PlasmaCore.Units.devicePixelRatio
 
-		//-----------------------------  Helpers ------------------
+		//-----------------------------  Helpers --------------------------------------------
 		// Added workaround by @zontafil thank you!
 		
 		Timer {
@@ -64,6 +64,18 @@ Item {
 					gptWebView.reload();
 			}
 		}
+
+		//-------------------------------------- Connections  &&  handlers ------------------------------------
+
+
+		 Keys.onPressed: {
+			if (event.key === Qt.Key_F5 && gptWebView) {
+				gptWebView.reload();
+			}
+			// Prevent the event from propagating further
+			event.accepted = true;
+		}
+
 
 		Connections {
 			target: plasmoid
@@ -246,9 +258,9 @@ Item {
 					offTheRecord: false
 					httpCacheType: WebEngineProfile.DiskHttpCache
 					persistentCookiesPolicy: WebEngineProfile.ForcePersistentCookies
-					downloadPath: plasmoid.configuration.downloadLocation ?
-										plasmoid.configuration.downloadLocation :
-										chatGptProfile.downloadPath
+					downloadPath: (plasmoid.configuration.downloadLocation ?
+										Qt.resolveUrl(plasmoid.configuration.downloadLocation) :
+										chatGptProfile.downloadPath) + "/"
 					userScripts: [
 						WebEngineScript {
 							injectionPoint: WebEngineScript.DocumentCreation
@@ -257,10 +269,18 @@ Item {
 							sourceUrl: "./js/helper_functions.js"
 						}
 					]
+					onDownloadFinished: {
+						console.log("onDownloadFinished : " +download.downloadDirectory + download.downloadFileName);
+					}
 					onDownloadRequested : {
 						console.log("onDownloadRequested : " + download.downloadFileName);
 						if( plasmoid.configuration.downloadLocation ) {
+							download.downloadDirectory = chatGptProfile.downloadPath;
 							download.accept();
+							console.log("onDownloadRequested : downloaded to "+download.downloadDirectory);
+							console.log("onDownloadRequested : downloaded to "+plasmoid.configuration.downloadLocation );
+						} else {
+							console.log("onDownloadRequested : please configure a download location");
 						}
 					}
 				}
@@ -312,9 +332,16 @@ Item {
 
 				onNewViewRequested : {
 					console.log("onNewViewRequested");
+					if(request.requestedUrl.toString().match(/https?\:\/\/chat\.openai\.com/)) {
+						gptWebView.url = request.requestedUrl;
+						console.log(request.url);
+					} else {
+						Qt.openUrlExternally(request.url);
+						request.action = WebEngineNavigationRequest.IgnoreRequest;
+					}
 				}
 
-				onJavaScriptConsoleMessage: if( Qt.application.arguments[0] == "plasmoidviewer" ) {
+				onJavaScriptConsoleMessage: if( Qt.application.arguments[0].match(/plasmoidviewer/) ) {
 					console.log("Chat-GPT: " + message);
 				}
 
