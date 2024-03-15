@@ -3,19 +3,19 @@
 *    SPDX-License-Identifier: LGPL-2.1-or-later
 */
 
-import QtQuick 2.3
-import QtQuick.Layouts 1.0
-import QtQuick.Controls 2.0
-import QtQuick.Dialogs 1.3
-import org.kde.plasma.core 2.0 as PlasmaCore
-import org.kde.plasma.components 3.0 as PlasmaComponents
-import org.kde.plasma.plasmoid 2.0
-import org.kde.plasma.extras 2.0 as PlasmaExtras
-import org.kde.kirigami 2.19 as Kirigami
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Dialogs
+import org.kde.plasma.core as PlasmaCore
+import org.kde.plasma.components as PlasmaComponents
+import org.kde.plasma.plasmoid
+import org.kde.plasma.extras as PlasmaExtras
+import org.kde.kirigami as Kirigami
 
-import QtWebEngine 1.9
+import QtWebEngine
 
-Item {
+PlasmoidItem {
 	id: root
 	property bool themeMismatch: false;
 	property int nextReloadTime: 0;
@@ -23,19 +23,19 @@ Item {
 	property int maxReloadRetiries: 25;
 	property bool loadedsuccessfully:false;
 
-	Plasmoid.compactRepresentation: CompactRepresentation {}
+	compactRepresentation: CompactRepresentation {}
 
-	Plasmoid.fullRepresentation: ColumnLayout {
+	fullRepresentation: ColumnLayout {
 		anchors.fill: parent
 
-		Layout.minimumWidth: 256 * PlasmaCore.Units.devicePixelRatio
-		Layout.minimumHeight:  512 * PlasmaCore.Units.devicePixelRatio
-		Layout.preferredWidth: 520 * PlasmaCore.Units.devicePixelRatio
-		Layout.preferredHeight: 840 * PlasmaCore.Units.devicePixelRatio
+		Layout.minimumWidth: 256 * 1
+		Layout.minimumHeight:  512 * 1
+		Layout.preferredWidth: 520 * 1
+		Layout.preferredHeight: 840 * 1
 
 		//-----------------------------  Helpers --------------------------------------------
 		// Added workaround by @zontafil thank you!
-		
+
 		Timer {
 			id: exposeTimer
 
@@ -68,7 +68,7 @@ Item {
 		//-------------------------------------- Connections  &&  handlers ------------------------------------
 
 
-		 Keys.onPressed: {
+		Keys.onPressed: {
 			if (event.key === Qt.Key_F5 && gptWebView) {
 				gptWebView.reload();
 			}
@@ -113,10 +113,10 @@ Item {
 		ColumnLayout {
 			spacing: Kirigami.Units.mediumSpacing
 
-			PlasmaExtras.PlasmoidHeading {
+			Kirigami.Heading {
 				Layout.fillWidth: true
 
-				ColumnLayout {					
+				ColumnLayout {
 					anchors.fill: parent
 					Layout.fillWidth: true
 
@@ -244,135 +244,140 @@ Item {
 		//-------------------------  Actual ChatGPT View --------------------------
 
 		WebEngineView {
-				// anchors.fill: parent
-				Layout.fillHeight: true
-				Layout.fillWidth: true
+			// anchors.fill: parent
+			Layout.fillHeight: true
+			Layout.fillWidth: true
 
-				id: gptWebView
-				focus: true
-				url: "https://chat.openai.com/chat"
+			id: gptWebView
+			focus: true
+			url: "https://chat.openai.com/chat"
 
-				profile: WebEngineProfile {
-					id: chatGptProfile
-					storageName: "chat-gpt"
-					offTheRecord: false
-					httpCacheType: WebEngineProfile.DiskHttpCache
-					persistentCookiesPolicy: WebEngineProfile.ForcePersistentCookies
-					downloadPath: (plasmoid.configuration.downloadLocation ?
-										Qt.resolveUrl(plasmoid.configuration.downloadLocation) :
-										chatGptProfile.downloadPath) + "/"
-					userScripts: [
-						WebEngineScript {
-							injectionPoint: WebEngineScript.DocumentCreation
-							name: "helperFunctions"
-							worldId: WebEngineScript.MainWorld
-							sourceUrl: "./js/helper_functions.js"
+			profile: WebEngineProfile {
+				id: chatGptProfile
+				storageName: "chat-gpt"
+				offTheRecord: false
+				httpCacheType: WebEngineProfile.DiskHttpCache
+				persistentCookiesPolicy: WebEngineProfile.ForcePersistentCookies
+				downloadPath: (plasmoid.configuration.downloadLocation ?
+									Qt.resolveUrl(plasmoid.configuration.downloadLocation) :
+									chatGptProfile.downloadPath) + "/"
+
+				onDownloadFinished: {
+					console.log("onDownloadFinished : " +download.downloadDirectory + download.downloadFileName);
+				}
+				onDownloadRequested : {
+					console.log("onDownloadRequested : " + download.downloadFileName);
+					if( plasmoid.configuration.downloadLocation ) {
+						download.downloadDirectory = chatGptProfile.downloadPath;
+						download.accept();
+						console.log("onDownloadRequested : downloaded to "+download.downloadDirectory);
+						console.log("onDownloadRequested : downloaded to "+plasmoid.configuration.downloadLocation );
+					} else {
+						console.log("onDownloadRequested : please configure a download location");
+					}
+				}
+			}
+
+			settings.javascriptCanAccessClipboard: plasmoid.configuration.allowClipboardAccess
+
+			Component.onCompleted: {
+				var helperScript = {
+					name: "helperFunctions",
+					injectionPoint: WebEngineScript.DocumentCreation,
+					sourceUrl: Qt.resolvedUrl("./js/helper_functions.js"),
+					worldId: WebEngineScript.MainWorld
+				}
+
+				userScripts.collection = [ helperScript ]
+			}
+
+			onLoadingChanged: {
+				if(WebEngineView.LoadSucceededStatus === loadRequest.status) {
+					root.reloadRetries = 0;
+					let themeLightness = (isDark(theme.backgroundColor) ? 'dark' : 'light') ;
+
+					gptWebView.runJavaScript("document.userScripts.setConfig("+JSON.stringify(plasmoid.configuration)+");");
+					gptWebView.runJavaScript("document.userScripts.setSendOnEnter();");
+					gptWebView.runJavaScript("document.userScripts.getTheme();",function(theme) {
+						if( !plasmoid.expanded && plasmoid.configuration.matchTheme && (!theme ||  theme !== themeLightness)) {
+							gptWebView.runJavaScript("document.userScripts.setTheme('"+themeLightness+"');");
+							gptWebView.relreloadAndBypassCacheoad();
+						} else if(plasmoid.configuration.matchTheme && theme !== themeLightness) {
+							root.themeMismatch = true;
 						}
-					]
-					onDownloadFinished: {
-						console.log("onDownloadFinished : " +download.downloadDirectory + download.downloadFileName);
-					}
-					onDownloadRequested : {
-						console.log("onDownloadRequested : " + download.downloadFileName);
-						if( plasmoid.configuration.downloadLocation ) {
-							download.downloadDirectory = chatGptProfile.downloadPath;
-							download.accept();
-							console.log("onDownloadRequested : downloaded to "+download.downloadDirectory);
-							console.log("onDownloadRequested : downloaded to "+plasmoid.configuration.downloadLocation );
-						} else {
-							console.log("onDownloadRequested : please configure a download location");
-						}
-					}
-				}
-
-				settings.javascriptCanAccessClipboard: plasmoid.configuration.allowClipboardAccess
-
-				onLoadingChanged: {
-					if(WebEngineView.LoadSucceededStatus === loadRequest.status) {
-						root.reloadRetries = 0;
-						let themeLightness = (isDark(theme.backgroundColor) ? 'dark' : 'light') ;
-
-						gptWebView.runJavaScript("document.userScripts.setConfig("+JSON.stringify(plasmoid.configuration)+");");
-						gptWebView.runJavaScript("document.userScripts.setSendOnEnter();");
-						gptWebView.runJavaScript("document.userScripts.getTheme();",function(theme) {
-							if( !plasmoid.expanded && plasmoid.configuration.matchTheme && (!theme ||  theme !== themeLightness)) {
-								gptWebView.runJavaScript("document.userScripts.setTheme('"+themeLightness+"');");
-								gptWebView.relreloadAndBypassCacheoad();
-							} else if(plasmoid.configuration.matchTheme && theme !== themeLightness) {
-								root.themeMismatch = true;
-							}
-						});
-						gptWebView.runJavaScript("document.userScripts.setTheme('"+themeLightness+"');");
-					}
-
-
-					loadedsuccessfully = 	( loadRequest.status == WebEngineLoadRequest.LoadSucceededStatus && (gptWebView.loadProgress == 100 || gptWebView.loadProgress == 0))
-										&&
-											( !gptWebView.loading )
-
-				}
-
-				onFileDialogRequested: {
-					console.log("onFileDialogRequested");
-					//console.log(JSON.stringify(request));
-					fileDialog.title = "Choose File";
-					fileDialog.accept.connect(function (request){
-						request.dialogAccept(fileDialog.selectedFiles);
 					});
-					fileDialog.reject.connect(function(request) {
-						request.dialogReject()
-					});
-					fileDialog.open();
-					request.accepted = true
+					gptWebView.runJavaScript("document.userScripts.setTheme('"+themeLightness+"');");
 				}
 
-				onJavaScriptDialogRequested : {
-					console.log("onJavaScriptDialogRequested");
-				}
 
-				onNewViewRequested : {
-					console.log("onNewViewRequested");
-					if(request.requestedUrl.toString().match(/https?\:\/\/chat\.openai\.com/)) {
-						gptWebView.url = request.requestedUrl;
+				loadedsuccessfully = 	( loadRequest.status == WebEngineLoadRequest.LoadSucceededStatus && (gptWebView.loadProgress == 100 || gptWebView.loadProgress == 0))
+									&&
+										( !gptWebView.loading )
+
+			}
+
+			onFileDialogRequested: {
+				console.log("onFileDialogRequested");
+				//console.log(JSON.stringify(request));
+				fileDialog.title = "Choose File";
+				fileDialog.accept.connect(function (request){
+					request.dialogAccept(fileDialog.selectedFiles);
+				});
+				fileDialog.reject.connect(function(request) {
+					request.dialogReject()
+				});
+				fileDialog.open();
+				request.accepted = true
+			}
+
+			onJavaScriptDialogRequested : {
+				console.log("onJavaScriptDialogRequested");
+			}
+
+			onNewWindowRequested : {
+				console.log("onNewViewRequested");
+				if(request.requestedUrl.toString().match(/https?\:\/\/chat\.openai\.com/)) {
+					gptWebView.url = request.requestedUrl;
+					console.log(request.url);
+				} else {
+					Qt.openUrlExternally(request.url);
+					request.action = WebEngineNavigationRequest.IgnoreRequest;
+				}
+			}
+
+			onJavaScriptConsoleMessage: if( Qt.application.arguments[0].match(/plasmoidviewer/) ) {
+				console.log("Chat-GPT: " + message);
+			}
+
+			onNavigationRequested: {
+				if(request.navigationType == WebEngineNavigationRequest.LinkClickedNavigation) {
+					if(request.url.toString().match(/https?\:\/\/chat\.openai\.com/)) {
+						gptWebView.url = request.url;
 						console.log(request.url);
 					} else {
 						Qt.openUrlExternally(request.url);
 						request.action = WebEngineNavigationRequest.IgnoreRequest;
 					}
 				}
-
-				onJavaScriptConsoleMessage: if( Qt.application.arguments[0].match(/plasmoidviewer/) ) {
-					console.log("Chat-GPT: " + message);
-				}
-
-				onNavigationRequested: {
-					if(request.navigationType == WebEngineNavigationRequest.LinkClickedNavigation) {
-						if(request.url.toString().match(/https?\:\/\/chat\.openai\.com/)) {
-							gptWebView.url = request.url;
-							console.log(request.url);
-						} else {
-							Qt.openUrlExternally(request.url);
-							request.action = WebEngineNavigationRequest.IgnoreRequest;
-						}
-					}
-				}
-
-				function isDark(color) {
-					let luminance = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
-					return (luminance < 0.5);
-				}
 			}
-			WebEngineView {
-				id:gptWebViewInspector
-				enabled: false
-				visible: false
-				z:100
-				height:parent.height /2
 
-				Layout.fillWidth:true
-				Layout.alignment:Qt.AlignBottom
-				inspectedView:enabled ? gptWebView : null
+			function isDark(color) {
+				let luminance = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+				return (luminance < 0.5);
 			}
+		}
+
+		WebEngineView {
+			id:gptWebViewInspector
+			enabled: false
+			visible: false
+			z:100
+			height:parent.height /2
+
+			Layout.fillWidth:true
+			Layout.alignment:Qt.AlignBottom
+			inspectedView:enabled ? gptWebView : null
+		}
 	}
 }
 
