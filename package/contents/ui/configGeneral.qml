@@ -24,11 +24,11 @@ KCM.SimpleKCM {
 			text: i18n("Send On Enter")
 		}
 		QQC2.Label {
-			font.pixelSize: 12
+			opacity: 0.7
 			text:i18n("When checked pressing Enter will send the query to ChatGPT.");
 		}
 		QQC2.Label {
-			font.pixelSize: 8
+			opacity: 0.7
 			font.italic: true
 			text:i18n("For now please reload the page with the 'Reload' Button after changing this configuration.");
 		}
@@ -43,7 +43,7 @@ KCM.SimpleKCM {
 			text: i18n("Allow ChatGPT system clipboard access")
 		}
 		QQC2.Label {
-			font.pixelSize: 8
+			opacity: 0.7
 			font.italic: true
 			text:i18n("This is enabled by default to allow for quick code/recipe/etc but can be disabled if you are worried about ChatCGPT  examining your system clipboard");
 		}
@@ -56,7 +56,7 @@ KCM.SimpleKCM {
 			}
 		}
 		QQC2.Label {
-			font.pixelSize: 8
+			opacity: 0.7
 			font.italic: true
 			text:i18n("Select the directory to download files to.");
 		}

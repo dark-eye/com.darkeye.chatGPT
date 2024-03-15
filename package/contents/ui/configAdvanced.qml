@@ -27,7 +27,7 @@ KCM.SimpleKCM {
         }
 
         QQC2.Label {
-            font.pixelSize: 8
+            opacity: 0.7
             font.italic: true
             text:i18n("This is a workaround to allow input field to be fcoused when using the widget shortcut.") +
                         "\n" +
@@ -51,7 +51,7 @@ KCM.SimpleKCM {
             live:true
         }
         QQC2.Label {
-            font.pixelSize: 8
+            opacity: 0.7
             font.italic: true
             text:i18n("This is a limit on how often the widget will try to auto reload the page (when hidden) if the page failed to load.");
         }
