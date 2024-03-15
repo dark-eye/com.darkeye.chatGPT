@@ -1,4 +1,5 @@
 {
+    "KPackageStructure": "Plasma/Applet",
     "KPlugin": {
         "Authors": [
             {
@@ -11,13 +12,9 @@
         "Id": "com.darkeye.chatGPT",
         "License": "BSD 3.0",
         "Name": "ChatGPT Plasmoid",
-        "ServiceTypes": [
-            "Plasma/Applet"
-        ],
         "Version": "0.8",
         "Website": "https://github.com/dark-eye/com.darkeye.chatGPT"
     },
-    "X-Plasma-API": "declarativeappletscript",
-    "X-Plasma-MainScript": "ui/main.qml",
-    "X-Plasma-StandAloneApp": true
+    "X-Plasma-StandAloneApp": true,
+    "X-Plasma-API-Minimum-Version": "6.0"
 }
